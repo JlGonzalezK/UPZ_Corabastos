@@ -23,7 +23,7 @@ Explorar fuentes censales y geoespaciales mediante herramientas computacionales,
 ## Metodología
 Primera etapa:
 - Se hace uso del lenguaje de programación estadística [R y algunas de sus librerías](https://cran.r-project.org/) para procesamiento y análisis inicial.
-- Como IDE, se elige [Rstudio](https://posit.co/downloads/) por su conveniencia y versatilidad.
+- Como IDE, se elige [RStudio](https://posit.co/downloads/) por su conveniencia y versatilidad.
 - Se utilizan los microdatos del CNPV 2018, publicados por el Departamento Administrativo Nacional de Estadística (DANE).
 - El enfoque es exploratorio y descriptivo.
 
