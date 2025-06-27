@@ -103,7 +103,7 @@ Para consultar información detallada sobre el diccionario, así como del conjun
 
 Siguiendo las recomendaciones dadas en el curso, presento el código solicitado para este primer ejercicio exploratorio. 
 
-Para ir al recurso [pulse aquí.](https://github.com/JlGonzalezK/UPZ_Corabastos/blob/main/scripts/primer_avance.R)
+Para ir al recurso [pulse aquí.](https://github.com/JlGonzalezK/UPZ_Corabastos/blob/main/src/primer_avance.R)
 
 ___
 
