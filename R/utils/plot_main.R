@@ -117,7 +117,7 @@ grafico_valores_agrupados <- function(
   
   ggplot(data, aes(x = !!x_var_enquo, y = !!y_var_enquo, fill = !!fill_var_enquo)) +
     geom_bar(stat = "identity") +
-    scale_y_continuous(breaks = seq(0, 5, 0.5)) +  # ← Aquí el ajuste
+    scale_y_continuous(breaks = seq(0, 5, 0.5)) +
     labs(
       title = titulo,
       x = x_label %||% rlang::as_label(x_var_enquo),
