@@ -16,6 +16,13 @@ jlgonzalezca@unal.edu.co
 
 Este repositorio contiene un primer avance exploratorio para caracterizar demográficamente a la población residente en la UPZ 80 (Corabastos), ubicada en la ciudad de Bogotá. El ejercicio forma parte del trabajo final de las asignaturas "Introducción a R para Ciencias Sociales" y "Sociología Urbana", se propone como insumo para una futura investigación de grado en sociología.
 
+## Instrucciones
+
+- Descargue o clone este repositorio
+- Abra el fichero `UPZ_Corabastos.Rproj` con Rstudio para establecer la raíz automáticamente y repdroducir el codigo sin problemas
+- Ya en Rstudio, abra el archivo `informe_final.Rmd` para reproducir el ejercicio
+- **Opcional:** Puede usar `informe_final.html` para ver el informe completo de manera interactiva.
+
 ## Objetivo
 
 Explorar fuentes censales y geoespaciales mediante herramientas computacionales, con énfasis en el lenguaje de programación R, como insumo para construir un perfil del territorio de interés.
@@ -38,6 +45,7 @@ Disposición sugerida del espacio de trabajo para reproducir correctamente este 
           ├── output/                         # Resultados obtenidos durante el proceso  
           ├── R/                              # Código del proyecto
           ├── UPZ_Corabastos.Rproj            # Archivo para abrir el proyecto y establecer la raíz.
+          └── informe_final.html              # Informe exportado a html con mapa interactivo incrustado
           └── informe_final.Rmd               # Archivo maestro del proyecto
 
 ```
