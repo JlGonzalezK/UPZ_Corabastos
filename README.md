@@ -45,7 +45,7 @@ Disposición sugerida del espacio de trabajo para reproducir correctamente este 
           ├── output/                         # Resultados obtenidos durante el proceso  
           ├── R/                              # Código del proyecto
           ├── UPZ_Corabastos.Rproj            # Archivo para abrir el proyecto y establecer la raíz.
-          └── informe_final.html              # Informe exportado a html con mapa interactivo incrustado
+          ├── informe_final.html              # Informe exportado a html con mapa interactivo incrustado
           └── informe_final.Rmd               # Archivo maestro del proyecto
 
 ```
