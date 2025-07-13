@@ -34,10 +34,11 @@ Disposición sugerida del espacio de trabajo para reproducir correctamente este 
 ```
 ~/Desktop/UPZ_Corabastos
           ├── doc/                            # Documentación del proyecto  
-          ├── input/                          # Fuentes de datos del proyecto (descarga manual)  
+          ├── input/                          # Fuentes de datos del proyecto
           ├── output/                         # Resultados obtenidos durante el proceso  
-          ├── R/                              # Código del proyecto 
-          └── UPZ_Corabastos.Rproj            # Archivo para abrir el proyecto 
+          ├── R/                              # Código del proyecto
+          ├── UPZ_Corabastos.Rproj            # Archivo para abrir el proyecto y establecer la raíz.
+          └── informe_final.Rmd               # Archivo maestro del proyecto
 
 ```
 
