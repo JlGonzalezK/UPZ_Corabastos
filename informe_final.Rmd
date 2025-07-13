@@ -1,0 +1,554 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+if(!require("pacman")) install.packages("pacman"); library(pacman)
+p_load(arrow, digest, dplyr, fs, ggplot2, haven, knitr, labelled, purrr, readr, 
+       readxl, rlang, sf, stringr, scales, tibble, tidyr, leaflet, leaflet.extras)
+
+source("R/lib/tables/tables_main.R")
+source("R/lib/tables/tables_dem.R")
+source("R/lib/tables/table_summary.R")
+source("R/lib/plot/plotbar_basic.R")
+source("R/lib/plot/plotbar_faceted.R")
+source("R/lib/plot/plot_ojives.R")
+source("R/lib/plot/plot_pyramid.R")
+source("R/lib/gis/viz_leaflet.R")
+
+```
+
+```{r load data, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+
+upz80 <- read_rds("input/upz80_filtered.rds")
+
+cnpv_5per_filter  <- upz80$cnpv$cnpv_5per_filter
+geo_mgn_filter    <- upz80$geo$geo_mzn_filter
+geo_upz_filter    <- upz80$geo$geo_upz_filter
+upz_dadep         <- st_read("input/DADEP/SHP/IndUPZ.shp")
+upz_dadep         <- st_transform(upz_dadep, st_crs(geo_mgn_filter))
+```
+
+# La producción del espacio urbano en la UPZ Corabastos: análisis exploratorio de fuentes censales
+
+::: {align="right"}
+**Jorge Luis González–Castellanos**\
+*Estudiante de sociología. Universidad Nacional de Colombia, Sede Bogotá*
+
+[jlgonzalezca\@unal.edu.co](mailto:jlgonzalezca@unal.edu.co){.email}
+
+2025
+:::
+
+## Introducción
+
+La UPZ Corabastos, ubicada en la ciudad de Bogotá, alberga un nodo logístico de carácter critico para la República de Colombia, en ella se encuentra la segunda central abastos más grande de América, la Corporación de Abastos S.A (Corabastos). Para que esto sea posible, miles de personas han construido su materialidad de manera continua desde hace más de 40 años; asimismo muchos de ellos han producido el espacio urbano circundante a la gran plaza, lugar que surge, principalmente, en torno a su economía.
+
+Esto implica el ensamblaje de una plétora de subredes y circuitos comerciales en la órbita de la principal central de abastos de la capital, produciendo así un espacio social diverso y constante re-configuración. Tanto como la materialidad que le sustenta, aunque negociada con las autoridades gubernamentales, es mayormente un producto de la auto-construcción. Una consecuencia de este intrincado proceso relacional se refleja en la producción de una experiencia urbana intensa y característica, que a su vez transforma la espacialidad de sus barrios manera permanente y dando sustento a la existencia de su lugar.
+
+De ahí la importancia que encuentro en caracterizar a sus pobladores. Para ello, es fundamental construir insumos que permitan un enfoque de investigación amplio y plural, que implique distintos abordajes metodológicos, técnicos, y orientados a construir una representación detallada del tejido urbano, especialmente de sus gentes. Con este breve proceso de investigación se busca construir un producto orientado a complementar mi objeto de estudio.
+
+Las actuales herramientas computacionales disponibles hacen más posible que nunca su aplicación para la investigación social aplicada, con estas realizaré un breve perfil demográfico del sector usando como base el Censo Nacional de Población y Vivienda 2018 del Departamento Administrativo Nacional de Estadística - DANE. Queda abierta la posibilidad de usar otras fuentes censales para construir una representación más longitudinal de la población residente en la zona de interés.
+
+Dicho producto servirá como insumo para una investigación más amplia que actualmente llevo a cabo, y que implica un enfoque metodológico más amplio que el aquí planteado.
+
+## Justificación
+
+Considero que es muy importante aplicar una metodología cuantitativa para crear este insumo, ya que si bien, algunos trabajos previos en la zona se nutren de estadísticas oficiales –entre otras–, no pude encontrar un estudio sociológico del sector que implemente directamente técnicas de análisis de datos cuantitativos, esto me plantea la necesidad de explorar estas fuentes de datos de manera más específica (e.g. microdatos) para responder a mis preguntas de investigación. Además, creo que es necesario para mi actual proceso de formación profesional contar con un mínimo de habilidades técnicas que me permitan entender de manera detallada y plural la realidad social, los métodos cuantitativos y computacionales brindan una herramienta indispensable para ello.
+
+En ese sentido, creo que para construir el objeto de estudio puedo valerme del poder que ofrecen las herramientas informáticas disponibles, y que considero fundamentales para hacer investigación, al menos, en los albores del siglo XXI. El lenguaje de programación estadística R y su amplio ecosistema de software es una de ellas, por tanto, considero que es la herramienta adecuada para realizar esta primera etapa de extracción y análisis de datos cuantitativos.
+
+## Pregunta de investigación
+
+De muchas preguntas surgidas, la más pertinente para este proyecto de investigación –y aprendizaje– es quizás la siguiente: ***¿cómo se compone la población de la UPZ 80 en un sentido demográfico, al menos, para el corte del año 2018?***
+
+## Hipótesis
+
+En un sentido más *heurístico* que estrictamente *nomotético*, quisiera plantear una hipótesis abierta para este ejercicio. Dicho así, planteo que, posiblemente, los habitantes la UPZ 80 son familias de origen rural, de escasos recursos y mayormente jóvenes, aunque dicha población se encuentra en un continuo proceso de envejecimiento, además de una tendencia decreciente de la natalidad. A pesar de ello, las tasas de escolaridad han aumentado en las generaciones más jóvenes de la UPZ, indicando un lento aunque continuo proceso de movilidad social *relativamente* ascendente.
+
+Es posible que para corroborar este planteamiento deba valerme de otras fuentes estadísticas, así como de un contraste con un ejercicio ampliado de investigación documental, y una exploración *in-situ*. Esto último se dejará para otro momento de la investigación, que no se contempla en este ejercicio de aprendizaje.
+
+## Revisión de literatura
+
+Para este apartado, sólo selecciono algunas fuentes consultadas previamente, las cuales considero como las más pertinentes para el caso.
+
+***Trabajo y economía popular en Corabastos:*** El trabajo de Suárez Forero (2020) caracteriza a los trabajadores de la economía popular en Corabastos (bicitaxistas, vendedores ambulantes, recicladores), describiendo cómo la ocupación informal de la vía pública –producto de carencia de espacios formales– genera una materialidad precaria: puestos móviles, cobertizos improvisados y trazados de circulación peatonal definidos según la lógica del flujo de mercancías. Esta “infraestructura popular” es co-creada día a día entre los propios trabajadores y actitudes institucionales contradictorias de control y tolerancia, lo cual evidencia la coproducción socioespacial del sector, en tanto campo en disputa (Suárez Forero, 2020).
+
+**Investigación participante, interaccionismo y micropoder:** Por su parte, Gil Torres (2021) a través de un enfoque *interaccionista* inspirado en la escuela de Chicago de Irving Goffman, analiza y participa de las interacciones entre coteros (y *performando* dicho rol) y otros trabajadores de la economía popular dentro de la territorialidad de Corabastos S.A. Sus observaciones de campo muestran que la tensión entre lo formal e informal se traduce en relaciones de poder y resistencia, fruto de alianzas de solidaridad y negociaciones diarias. Estas estructuras provisionales acaban adoptando una materialidad más duradera, configurando un espacio que resiste intentos de erradicación y redefine la experiencia de uso de Corabastos (Gil Torres, 2021).
+
+Si bien, estos insumos son clave para caracterizar a los habitantes de la UPZ Corabastos, en tanto los actores de la economía popular no sólo habitan el espacio de manera itinerante, sino incluso, en gran parte son los residentes de los barrios que configuran el “*hinterland*” de principal central de abastos de Colombia, las estadísticas oficiales ofrecen una mirada complementaria del lugar que si bien, en el caso de Suárez (op. cit) usa de manera directa, su enfoque está orientado en el estudio de las prácticas económicas de dos sectores específicos de la economía popular la UPZ Corabastos, especialmente en la zona norte. Esto me lleva a considerar un uso más directo de los recursos oficiales, disponibles de manera abierta.
+
+## Presentación del conjunto de datos
+
+El Censo Nacional de Población y Vivienda 2018 (DANE) es uno, de varios conjuntos de datos abiertos, que permite la construcción de un insumo clave para una caracterización detallada del sector. Los microdatos disponibles desde los repositorios del Departamento Administrativo Nacional de Estadística cuentan con un nivel de detalle sobre la población colombiana, altos estándares de calidad y seguridad, así como un nivel de desagregación suficiente. considero que este conjunto de datos merece ser usado en la investigación social aplicada.
+
+## Descripción del conjunto de datos
+
+El conjunto de datos cuenta con información estadística segmentada en cinco categorías, para este breve ejercicio sólo usaré la tabla correspondiente a la categoría de personas. Algunas variables relevantes para este ejercicio se presentan a continuación.
+
+| Código | Etiqueta |
+|---------------------------|---------------------------------------------|
+| P_SEXO_VS1 | Sexo |
+| P_EDADR_VS1 | Edad en Grupos Quinquenales |
+| P_PARENTESCOR_VS1 | Relación de parentesco con el jefe(a) del hogar (recodificada) |
+| PA1_GRP_ETNIC_VS1 | Reconocimiento étnico |
+| PA_HABLA_LENG_VS1 | Habla la lengua nativa de su pueblo |
+| PA1_ENTIENDE_VS1 | Entiende la lengua nativa de su pueblo |
+| PB_OTRAS_LENG_VS1 | Habla otra(s) lengua(s) nativa(s) |
+| PA_LUG_NAC_VS1 | Lugar de nacimiento |
+| PA_VIVIA_5ANOS_VS1 | Lugar de residencia hace 5 años |
+| PA_VIVIA_1ANO_VS1 | Lugar de residencia hace 12 meses |
+| P_ALFABETA_VS1 | Sabe leer y escribir |
+| PA_ASISTENCIA_VS1 | Asistencia escolar (de forma presencial o virtual) |
+| P_NIVEL_ANOSR_VS1 | Nivel educativo más alto alcanzado y último año o grado aprobado en ese nivel (recodificado) |
+| P_TRABAJO_VS1 | Que hizo durante la semana pasada |
+| P_EST_CIVIL_VS1 | Estado civil |
+| PA_HNV_VS1 | Ha tenido algún hijo(a) nacido vivo(a) |
+| PA1_THNV_VS1 | Hijos(as) nacidos vivos: Total |
+| PA2_HNVH_VS1 | Hijos(as) nacidos vivos: Hombres |
+| PA3_HNVM_VS1 | Hijos(as) nacidos vivos: Mujeres |
+| PA_HNVS_VS1 | Hijos(as) sobrevivientes |
+| PA1_THSV_VS1 | Hijos(as) sobrevivientes: Total |
+| PA2_HSVH_VS1 | Hijos(as) sobrevivientes: Hombres |
+| PA3_HSVM_VS1 | Hijos(as) sobrevivientes: Mujeres |
+
+Para consultar información detallada sobre el diccionario, así como del conjunto de datos y la operación estadística en general, [pulse aquí.](https://microdatos.dane.gov.co/index.php/catalog/643/data-dictionary/F11?file_name=PERSONAS)
+
+## Sobre el proceso de extracción de datos
+
+Para obtener el conjunto de datos filtrado se realiza un filtrado inicial por capas geográficas, luego, se cruzan con los datos censales en función de su estructura interna. Los datos de origen están georreferenciados con base en la codificación DIVIPOLA, que puede ser consultada [pulsando aquí.](https://geoportal.dane.gov.co/geovisores/territorio/consulta-divipola-division-politico-administrativa-de-colombia/)
+
+Una vez delimitada el área geográfica se procede con la limpieza de los datos, lo cual requirió de un exhaustivo proceso de auditoria y análisis casuístico para detectar inconsistencias en el conjunto de datos, preparación del diccionario y posterior etiquetado del de conjunto de datos resultante, el cual es exportado en formato .rds por su conveniencia para este proyecto en particular. El paquete incluye las 5 tablas del CNPV 2018 en formato tibble/dataframe preparadas para su análisis y dos capas geográficas filtradas en formato sf; todo en un objeto de tipo lista.
+
+Para ir al objeto [puede pulsar aquí](https://github.com/JlGonzalezK/UPZ_Corabastos/blob/main/input/upz80_filtered.rds)
+
+El proceso realizado podrá ser consultado de manera detallada desde el siguiente [enlace](https://github.com/JlGonzalezK/DANExtract)
+
+## Análisis de los datos
+
+Una vez cargado el conjunto de datos y realizado el proceso de construcción de las herramientas necesarias para el análisis, decido para este ejercicio de aprendizaje sólo tomar como fuente la tabla de personas, de la cual obtuve interesantes resultados.
+
+Los divido en tres categorías para facilitar el proceso de verificación de la hipótesis inicial; una introducción somera a la estructura del área elegida para seguir con algunos datos básicos de fecundidad, luego, se consultan las variables pertinentes para visibilizar indicadores de escolaridad, continúo con el apartado de ocuapción/trabajo y finalmente, cierro con el componente migratorio.
+
+------------------------------------------------------------------------
+
+## Sobre el concepto de UPZ
+
+Las Unidades de Planeamiento Zonal (UPZ) son divisiones administrativas que fueron creadas a finales de los años 90 e instruentalizadas a partir del Plan de Ordenamiento Territorial (POT) de Bogotá para organizar el suelo urbano de acuerdo con las dinámicas productivas y características sociales de cada sector. Su función principal ha sido definir normas urbanísticas y orientar procesos de renovación, mejoramiento y control territorial a escala zonal, articulando tanto la participación ciudadana como criterios técnicos (SDP).
+
+Sin embargo, es importante aclarar que la delimitación por UPZ, como la de Corabastos (UPZ 80), corresponde a una estructura normativa adoptada hace más de una década y que actualmente se considera obsoleta frente a las nuevas necesidades urbanas y de planeación de la ciudad. Por ello, las UPZ están siendo reemplazadas progresivamente por las Unidades de Planeación Local (UPL), una figura más actual que busca integrar de manera más precisa los procesos de ordenamiento territorial, participación ciudadana y gestión administrativa a nivel local dentro de Bogotá.
+
+------------------------------------------------------------------------
+
+## Sobre la UPZ
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "mapa interactivo de UPZ-Bogota. Elaboración propia. DANE, DADEP"}
+
+viz_leaflet(geo_upz_filter, 
+            geo_mgn_filter,
+            upz_dadep,
+            names = c("UPZ 80","Manzanas UPZ","UPZ total"))
+```
+
+
+
+La UPZ 80 Corabastos se ubica en la localidad de Kennedy, al suroccidente de Bogotá, y se caracteriza por concentrar la Central de Abastos más importante de la ciudad y del país, configurándose como un nodo estratégico de abastecimiento de productos agropecuarios y de actividades comerciales e industriales. Esta centralidad convierte a la UPZ 80 en un punto clave dentro de la red de centralidades urbanas y regionales, articulando flujos de población, bienes y servicios que trascienden el ámbito local.
+
+Fuera de la central, el resto del territorio de la UPZ se compone principalmente de desarrollos residenciales de origen informal, sujetos a programas de mejoramiento integral urbano y a procesos de regulación normativa. La UPZ 80 se inserta además en un sistema regional más amplio, conectándose con importantes vías de acceso como la Avenida Boyacá, la Avenida Ciudad de Cali y la Calle 13, lo que refuerza su papel de articulación entre Bogotá y otros centros urbanos de la región.
+
+## Estructura poblacional de la UPZ Corabastos
+
+```{r pyramid, echo=FALSE, fig.cap="Pirámide poblacional de la UPZ 80. Elaboración propia con datos CNPV 2018. DANE.", fig.height=8, fig.width=12, fig.align = "center"}
+
+piramide_pob(cnpv_5per_filter, age = P_EDADR, gender = P_SEXO,
+             title = "Distribución Demográfica por Edad y Sexo - UPZ 80 (2018). Elaboración propia. DANE")
+
+```
+
+**Descripción de pirámide**
+
+Los datos reflejan una población joven, en edad laboral plena, el mayor grupo poblacional[^1] corresponde a personas entre los 20 y 30 años, siendo en su mayoría hombres, tendencia que se mantiene hasta inicios de la mediana edad, en donde el indice de feminidad se impone hasta la vejez, se puede apreciar una contracción de la natalidad importante y una reducción drástica de la población de la tercera edad.
+
+[^1]: en el contexto demográfico se denomina población a un *"conjunto de personas que comparten un mismo territorio y período histórico y que están sujetas al riesgo de ocurrencia de eventos demográficos que aseguran su crecimiento (natalidad, mortalidad y migración)." esta definición difiere del concepto clásico estadístico, en donde la población demográfica sería también una muestra.* ([Universidad de la república](https://manualdemografia.cienciassociales.edu.uy/glosario/))
+
+la forma de la pirámide refleja un bono demográfico (ibid) importante, lo que implica una población potencialmente activa laboralmente y con algún nivel de ingresos mínimo. Es importante señalar el papel de Corabastos como eje comercial articulador de la trama relacional del sector, y de la conexión relevante de sus habitantes con la gran central.
+
+```{r tabla poblacion, echo=FALSE}
+kable(tabla_poblacion_sexo(cnpv_5per_filter), caption = " Tabla poblacional detallada de la UPZ Corabastos (2018)")
+
+```
+
+La contracción de la natalidad en la UPZ 80 me lleva explorar un indicador importante: el estado civil de la población.
+
+```{r echo=FALSE, fig.align="center", fig.cap="Estado civil en la UPZ 80 (Corabastos). Elaboración propia. DANE", fig.height=3, fig.width=9}
+grafico_barras_simple(cnpv_5per_filter, 
+                      P_EST_CIVIL, 
+                      titulo     = "Estado civil - subpoblación UPZ 80",
+                      x_label    = "",
+                      y_label    = "",
+                      fill_label = "Leyenda")
+```
+
+El gráfico muestra un elevado numero de personas solteras, alrededor del 41%, seguido de personas en unión libre con casi el 35%, el tercer grupo corresponde a personas casadas con algo menos del 15%. Esto se asocia claramente a la edad de la población del lugar, asimismo, es posible que el papel del trabajo (i.e. condiciones laborales), factores socioeconómicos, cambio cultural, seguridad, oferta de servicios públicos y educativos, haga del sector un lugar residencial complejo y asociado a las dinámicas del mercado laboral propio de la zona, lo cual hace que sea un lugar atractivo para personas que trabajan en la intrincada red económica asociada a Corabastos, así como al reciclaje, campos laborales en donde es bien sabido que se trata de espacios hiper-masculinizados. Todo lo anterior también se conecta directamente con un proceso de transición demográfica, que rebasa las fronteras artificiales de la UPZ.
+
+```{r pressure, echo=FALSE}
+kable(tabla_categorica_resumen(
+  data                = cnpv_5per_filter,
+  variable_categorica = P_EST_CIVIL,
+  modo_porcentaje = TRUE
+), caption = " Estado civil agrupada por etapas vitales")
+```
+
+El análisis detallado del indicador parece apuntar en esa dirección, también da pistas sobre el comportamiento reproductivo de esta subpoblación. En este punto es preciso explorar otros indicadores relevantes para analizar de manera más detallada tal componente fundamental.
+
+## Fecundidad
+
+Para empezar, un elemento clave a considerar la edad reproductiva. Según el [DANE](https://geoportal.dane.gov.co/servicios/atlas-estadistico/src/Tomo_I_Demografico/%E2%80%A2la-tasa-global-de-fecundidad.html) podríamos definir la Tasa Global de fecundidad como el *..."número promedio de hijos que una mujer tendría al final de sus años reproductivos (15 a 49 años) si estuviera expuesta a las condiciones de fecundidad en cada una de las edades específicas del momento en que se estima la tasa global y en ausencia de la mortalidad"* . este indicador, aunque no es el más preciso ni recomendado para un análisis exhaustivo, es ampliamente usado y puede dar pistas importantes sobre el componente psicosocial, socioeconómico y cultural del sector. Los datos revelan una población femenina importante en plena edad fértil, componente favorable para la reproducción de las condiciones materiales y sociales en condiciones adecuadas, sin embargo los indicadores de fecundidad muestran un panorama interesante, el cual, como ya se mencionó anteriormente, parece marcado por las condiciones estructurales del marco social, que marca una tendencia clara a nivel macro en ese mismo sentido.
+
+```{r echo=FALSE, fig.align="center", fig.cap=" Elaboración propia con microdatos CNPV 2018. DANE", fig.height=3, fig.width=9}
+tabla_fecundidad_upz80 <- tabla_fecundidad(cnpv_5per_filter,filtrar_rango = TRUE)
+
+grafico_valores_agrupados(
+  data       = tabla_fecundidad_upz80,
+  x_var      = grupo_edad,
+  y_var      = porcentaje,
+  fill_var   = grupo_edad,
+  titulo     = "Distribución de mujeres en edad fértil (15–49 años) - UPZ 80",
+  x_label    = "",
+  y_label    = "",
+  fill_label = "Grupo de edad"
+)
+```
+
+Nótese cómo este segmento poblacional en concreto, que ronda el 30% del total de la población total objeto de este análisis, se compone de mujeres mayormente jóvenes, entre los 25 y 35 años (47% aproximadamente), asimismo, es fundamental remarcar la tasa de fecundidad para este caso, indicador que marca una clara tendencia a la baja y en correlación directa con un valor de edad menor.
+
+```{r echo=FALSE}
+kable(tabla_fecundidad_upz80, , caption = "Tabla de fecundidad detallada de la UPZ 80 (2018)",fig.align = "center")
+```
+
+```{r echo=FALSE, fig.align="center", fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=3, fig.width=9}
+grafico_porcentual(
+  data       = tabla_fecundidad(cnpv_5per_filter),
+  x_var      = grupo_edad,
+  y_var      = fecundidad_media,
+  fill_var   = grupo_edad,
+  titulo     = "Fecundidad media por grupo de edad",
+  x_label    = "",
+  y_label    = "Hijos nacidos vivos por mujer",
+  fill_label = "Edad reproductiva"
+)
+```
+
+Hasta este punto hemos abordado a la población femenina en edad reproductiva, ahora bien es importante enfocar la mirada hacia una perspectiva más amplia para entender el comportamiento reproductivo del total de as mujeres de la UPZ.
+
+```{r echo=FALSE, fig.align="center", fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=4, fig.width=14, warning=FALSE}
+# Curva de fecundidad media según grupo etario
+grafico_curva_valores(
+  data       = tabla_fecundidad(cnpv_5per_filter,filtrar_rango = FALSE),
+  x_var      = grupo_edad,
+  y_var      = fecundidad_media,
+  titulo     = "Curva de fecundidad media según grupo etario (CNPV 2018)",
+  x_label    = "Grupo de edad",
+  y_label    = "Hijos nacidos vivos por mujer"
+)
+```
+
+El indicador da una clara respuesta respecto del factor reproductivo dentro del espacio. Siguiendo la tendencia global, propia del proceso de modernización, y frente a una constante presión demográfica, la fecundidad ha disminuido fuertemente en el sector, llegando a tasas inferiores al reemplazo. No obstante, hay que considerar el el peso relativo de la población femenina joven en el sector es significativamente más baja que sus coetáneos varones. Esto es un punto de apoyo fuerte para afirmar que en efecto, el lugar no parece apto para la reproducción biológica, no obstante es prematuro sacar conclusiones al respecto, ya que hay muchas variables que esta fuente no abarca, y que se incluso se salen de un marco epistemológico de carácter nomotético. Por el momento podría conjeturar sobre los factores socioeconómicos y de seguridad que son bien conocidos en este sector de la capital (SIEDCO). Sobre la composición del núcleo familiar, por limites de tiempo propios de este breve avance resulta impracticable ir más allá. Cerraré este componente tratando de contextualizar mis observaciones. El componente educativo puede ofrecer otro enfoque analítico para construir el objeto de estudio.
+
+## Escolaridad
+
+Los datos revelan varios elementos conexos a la dinámica poblacional, asimismo, da pistas sobre el capital cultural y social de sus habitantes, también de movilidad vertical y poder adquisitivo: incluso, puede darnos un marco bastante amplio que, en todo caso, requiere y exige un proceso riguroso de investigación. Por ahora, para este ejercicio exploratorio y de aprendizaje sólo tendré en cuenta la correlación entre edad, lugar de origen y grado de escolaridad para tener una perspectiva un poco más solida y detallada del lugar.
+
+```{r echo=FALSE, fig.align="center", fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=3, fig.width=9}
+grafico_barras_simple(cnpv_5per_filter, 
+                      P_NIVEL_ANOSR, 
+                      titulo     = "Grados de escolaridad - UPZ 80",
+                      y_label    = "",
+                      x_label    = "",
+                      fill_label = "Ulitmo grado alcanzado")
+```
+
+Para empezar, es importante destacar dos picos importantes en este indicador, los valores categóricos asociados a los grados de educación básica primaria y media (i.e. el "bachillerato"). Se podría pensar que, a juzgar por el gráfico anterior, la población de la UPZ es en gran parte infantil, no obstante, y como ya se ha demostrado previamente, sería un error craso, incluso supino, defender tal asunción. El gráfico muestra que casi el 60% de la población, para 2018, había alcanzado estudios en educación media (28%), seguido de básica primaria con un valor no muy lejano de esa cifra; sin embargo, si hacemos una revisión detallada del dato podemos ver que el panorama es mucho más complejo y revelador de la condición socioeconómica de sus protagonistas.
+
+```{r echo=FALSE}
+
+kable(tabla_categorica_resumen(
+  data                = cnpv_5per_filter,
+  variable_categorica = P_NIVEL_ANOSR, 
+  modo_porcentaje = TRUE
+), caption= "Tabla comparativa de grados de escolaridad por grupo etario")
+```
+
+Como es posible apreciar, el número de personas con un gŕado máximo alcanzado de educación básica primaria y secundaria son personas dentro del grupo de adultos (30 a 60 años) con el 12.3% y 13% respectivamente, seguidos de las juventudes con educación media (11%) y niñeces con 9.8% con básica primaria cumplimentada. Los adultos mayores destacan en este indicador con un 5.2% con básica primaria como maximo grado alcanzado. Hace falta un análisis un tanto más fino para poder tener una idea clara respecto de esta dimensión social tan importante en el desarrollo y ditección de un ser humano en la existencia material, al menos, en el contexto de la sociedad urbana moderna.
+
+```{r echo=FALSE, fig.align="right", fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=5, fig.width=10}
+# Gráfico de escolaridad por edad (porcentaje relativo)
+grafico_proporciones_cruzadas(
+  data       = cnpv_5per_filter,
+  x_var      = P_EDADR,
+  fill_var   = P_NIVEL_ANOSR,
+  titulo     = "Escolaridad por edad (porcentaje relativo)",
+  x_label    = "",
+  fill_label = "Nivel de escolaridad"
+)
+```
+
+Si normalizamos las cifras por porcentaje relativo, es posible evidenciar un patrón que da fuertes pistas sobre los capitales en juego, la movilidad vertical y horizontal, y las condiciones sociales y materiales de posibilidad de las personas de la UPZ Corabastos. Nótese cómo hay una correlación inversamente proporcional del grado de escolaridad respecto de una mayor edad, el grupo que relativamente menos años académicos completados ostenta es la cohorte entre los 75 y 80 años de edad, asimismo, las personas sin ningún grado educativo alcanzado aumentan exponencialmente después de la tercera edad. Por si sólo, este gráfico también resulta engañoso si consideramos el peso relativo de estas poblaciones en dentro del total (claramente se genera cierto ruido en función de la proporción de adultos mayores sobrevivientes dentro del llamado -en el contexto estadístico clásico, el- *marco muestral*), empero, si arroja una pista clave: se ve una tendencia clara del aumento de la proporción de personas jóvenes que alcanzan grados secundarios, se igual manera hay una clara tendencia a alcanzar grados técnicos, tecnológicos y profesionales en el segmento de los 15 a 30 años, que empieza a diminuir progresivamente hasta llegar a casi nulo en la tercera edad.
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+
+# Gráfico Distribución educativa por edad y sexo
+tabla_f_edu <- tabla_distribucion_faceta(cnpv_5per_filter, 
+                                           P_EDADR, 
+                                           P_NIVEL_ANOSR, 
+                                          P_SEXO)
+```
+
+```{r echo=FALSE, fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=5, fig.width=18, fig.align = "center"}
+
+# Distribución educativa por edad y sexo
+grafico_faceta(tabla_f_edu,
+               titulo = "Distribución educativa por edad y sexo (porcentaje relativo)",
+               x_label = "Grupo etario",
+               y_label = "Proporción (%)",
+               fill_label = "Nivel educativo",
+               facet_label = "Sexo")
+```
+
+Ahora bien, consideran la relación género educación, el gráfico anterior permite observar con nitidez cómo la distribución educativa presenta diferencias marcadas por cohortes y sexo. Se evidencia un patrón claro: mientras en las generaciones más jóvenes —especialmente entre los 15 y 30 años— predomina un nivel educativo medio y técnico, en las cohortes de mayor edad se concentra una mayor proporción de personas con niveles educativos básicos o incluso sin escolaridad formal. Además, el cruce con la variable sexo revela una ligera sobrerrepresentación femenina en los niveles más altos de escolaridad dentro de las cohortes jóvenes, lo que podría sugerir cambios recientes en las dinámicas de acceso a la educación superior entre hombres y mujeres residentes en la UPZ 80. No obstante, estas tendencias deben leerse con cautela, pues persisten desigualdades estructurales asociadas a condiciones laborales y sociales propias del sector, que limitan la plena traducción de estos logros educativos en mejores oportunidades de vida.
+
+```{r echo=FALSE, fig.align="center", fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", warning=FALSE}
+# Gráfico de escolaridad por sexo (proporción relativa) -OJO ajustar colores
+grafico_proporciones_cruzadas(
+  data       = cnpv_5per_filter,
+  x_var      = P_NIVEL_ANOSR,
+  fill_var   = P_SEXO,
+  titulo     = "Escolaridad por sexo (proporción relativa)",
+  x_label    = "Nivel educativo",
+  fill_label = "Sexo"
+)
+```
+
+Buscando sintetizar un poco mejor esta dimensión, un análisis de proporción relativa por sexos revela que, aunque hombres y mujeres de la UPZ 80 presentan perfiles educativos similares en los niveles básicos, son las mujeres quienes registran una mayor proporción relativa en niveles educativos medios y superiores, lo que refuerza la tendencia observada previamente respecto al avance educativo intergeneracional y su relación con el género. Esto se puede apreciar con mayor claridad en el siguiente gráfico por facetas.
+
+```{r echo=FALSE, fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", message=FALSE, warning=FALSE,fig.align = "center"}
+# Gráfico comparativo escolaridad por edad y sexo (líneas superpuestas)"
+grafico_ojiva_faceta(
+  cnpv_5per_filter,
+  P_EDADR,
+  P_SEXO,
+  P_NIVEL_ANOSR,
+  "Comparación de escolaridad por edad y sexo (líneas superpuestas)"
+)
+```
+
+Profundizando en el perfil educativo de la población, es necesario observar no solo el nivel máximo alcanzado, sino también la participación activa en procesos de formación. Por ello, a continuación se examina la asistencia educativa según las etapas del ciclo de vida, lo que permite identificar en qué momentos de la trayectoria vital se concentran los esfuerzos formativos y en qué medida dichos patrones reflejan las dinámicas sociales, económicas y culturales propias de la UPZ 80. Esta perspectiva complementa el análisis previo al ofrecer una mirada más detallada de las oportunidades y limitaciones educativas a lo largo del curso de vida.
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+# asistencia a centro educativo por grupos de edad
+grafico_proporciones_cruzadas(
+  data       = cnpv_5per_filter,
+  x_var      = P_EDADR,
+  fill_var   = PA_ASISTENCIA,
+  titulo     = "Asistencia educativa por etapa de vida (porcentaje relativo)",
+  x_label    = "",
+  fill_label = "Asistencia escolar"
+)
+```
+
+```{r echo=FALSE}
+kable(tabla_resumen_grupo(cnpv_5per_filter, PA_ASISTENCIA, P_EDADR), caption = "Tabla de frecuencia de asistencia escolar por rango Quinquenal - CNPV 2018. DANE")
+```
+
+La asistencia educativa también revela una dinámica interesante, y es cómo cae abruptamente cuando se llega a la juventud plena, etapa de la vida que es clave en el desarrollo profesional y social de las personas. Podría decirse que aunque bien, este es un factor relativamente común durante la transición hacia la adultez, también es posible interpretar, con base en lo examinado hasta el momento, que la población -en plena juventud- del sector es eminentemente de clase trabajadora. Pero es venturoso lanzar conclusiones aun.
+
+## Trabajo y actividad
+
+Según el [DANE](https://conceptos.dane.gov.co/conceptos/conceptos_catalogo), el trabajo se puede definir como *"toda actividad realizada por una persona de cualquier sexo y edad para producir bienes o prestar servicios para uso de otros o para uso propio. Incluye, actividades de producción para el autoconsumo, actividades remuneradas, actividades no remuneradas, actividades de voluntariado y otras actividades productivas"* . En ese sentido, tal definición define de manera amplia el intrincado mundo laboral, sus relaciones, y sus dinámicas. Esta perspectiva abre una dimensión amplia, aunque difusa, de las relaciones de re-producción económica y social propias de la experiencia humana, es así la actividad laboral se configura como un indicador clave para comprender como la población de Corabastos se relaciona en un sentido inter, intra y extra con diversos actores sociales, así como produce, reproduce y co-produce su espacio vital, es decir, su lugar en el mundo.
+
+```{r echo=FALSE, fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=4, fig.width=12}
+grafico_ciclo_vida(
+  cnpv_5per_filter, 
+  variable = P_TRABAJO, 
+  titulo = "Actividad laboral por grupo etario (ultima semana)")
+```
+
+El gráfico muestra con claridad cómo la participación en actividades laborales varía de forma esperada según el grupo etario. Se observa un aumento progresivo de la actividad laboral desde las juventudes hasta alcanzar su punto máximo en la adultez plena, reflejando el peso económico de esta cohorte dentro de la estructura social de la UPZ 80. Posteriormente, la participación disminuye de manera marcada en las etapas de vejez, lo que resulta coherente con los ciclos de vida laboral convencionales. Este patrón confirma que la población en edad productiva constituye el núcleo activo del sector, en estrecha relación con las dinámicas económicas ligadas a la central de abastos y a las actividades informales predominantes en el área. A pesar de lo anterior, llama la atención que las personas de la tercera edad siguen conformando alrededor del 25% de la población laboralmente activa.
+
+```{r echo=FALSE, fig.cap= "Tabla de frecuencia genaral para el componente laboral - CNPV 2018"}
+kable(tabla_por_etapa_filtrada(cnpv_5per_filter, P_TRABAJO, etapa_seleccionada = "Vejez"))
+```
+
+Si hacemos una revisión más detallada de la población laboral activa del sector, es posible evidenciar una relación clara entre el nivel educativo alcanzado y la participación en actividades laborales dentro de la UPZ 80. Se observa que los niveles educativos básicos concentran la mayor proporción de personas laboralmente activas, reflejando el perfil de una población trabajadora mayoritariamente vinculada a ocupaciones que no exigen alta cualificación formal. A medida que aumenta el nivel educativo, la participación laboral disminuye levemente, posiblemente por el efecto de tiempos prolongados dedicados a la formación entre quienes alcanzan niveles técnicos, tecnológicos o profesionales. Este patrón refuerza la idea de un tejido social estructurado en torno a actividades de baja exigencia educativa, propias del sector informal y de la economía popular circundante a Corabastos. No obstante, nótese la proporción de personas que reportan alguna actividad laboral en relación al grado de escolaridad.
+
+```{r echo=FALSE, fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=4, fig.width=12}
+grafico_proporciones_cruzadas(
+  data      = cnpv_5per_filter,
+  x_var     = P_NIVEL_ANOSR,
+  fill_var  = P_TRABAJO,
+  x_label   = "",
+  fill_label = "Actividad reciente",
+  titulo    = "Actividad laboral según nivel educativo (porcentaje relativo)"
+)
+```
+
+En todo caso, aunque en términos absolutos la mayoría de personas ocupadas pertenecen a niveles educativos básicos y medios, cuando se observa proporcionalmente la relación entre escolaridad y actividad laboral, se aprecia que quienes cuentan con niveles técnicos, tecnológicos o profesionales presentan una mayor probabilidad de estar laboralmente activos y, presumiblemente, vinculados a trabajos más estables o formales. No obstante, este segmento sigue siendo minoritario dentro del conjunto de la UPZ 80, lo que refuerza la idea de un tejido social donde predominan ocupaciones de baja cualificación y de inserción más precaria, ligadas a la economía popular y al sector informal.
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+
+tabla_f_wrk <- tabla_distribucion_faceta(cnpv_5per_filter, 
+                                           P_EDADR, 
+                                           P_TRABAJO, 
+                                           P_SEXO)
+```
+
+```{r echo=FALSE, fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=5, fig.width=18, fig.align = "center"}
+
+# Distribución educativa por edad y sexo
+grafico_faceta(tabla_f_wrk,
+               titulo = "Distribución laboral por edad y sexo (porcentaje relativo)",
+               x_label = "Grupo etario",
+               y_label = "Proporción (%)",
+               fill_label = "Nivel educativo",
+               facet_label = "Sexo")
+```
+
+Para cerrar este componente, es preciso hacerlo revisando el indicador de trabajo y genero en relación con la edad. Este cruce nos permite visualizar cómo la distribución de la actividad laboral varía simultáneamente según edad y sexo en la UPZ 80. Se observa que, en las edades centrales —particularmente entre los 25 y 50 años—, la participación laboral es especialmente alta, con una importante sobrerrepresentación masculina. En contraste, en los extremos del ciclo de vida —juventudes tempranas y vejez— la participación disminuye significativamente, acentuándose la brecha de género en las edades más avanzadas, donde las mujeres muestran una menor inserción laboral relativa. Este patrón refuerza la idea de un mercado de trabajo local estructurado en torno a actividades predominantemente masculinas y de fuerte anclaje informal, características propias del entorno social y económico de la UPZ Corabastos. Es muy importante ver la proporción de mujeres dedicadas a las prácticas del cuidado doméstico, el grueso de la mujeres del sector aun siguen reproduciendo un patrón tradicional género-labor propio del contexto clásico de la división sexual del trabajo. \## Migración
+
+Además de los factores demográficos y laborales, la composición social de la UPZ 80 se ve profundamente influida por dinámicas migratorias internas. Comprender el lugar de origen y los patrones de movilidad residencial de sus habitantes permite enriquecer el perfil poblacional del sector, revelando en qué medida se trata de una población establecida de larga data o de un territorio receptor de flujos migratorios recientes. A continuación, se presentan algunos indicadores clave que permiten explorar estas dimensiones, con especial atención a la relación entre edad, lugar de nacimiento y residencia previa, aspectos fundamentales para comprender los procesos de asentamiento y reproducción social en el área de estudio.
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+grafico_proporciones_cruzadas(
+  data       = cnpv_5per_filter,
+  x_var      = P_EDADR,
+  fill_var   = PA_LUG_NAC,
+  titulo     = "Lugar de nacimiento por grupo etario - UPZ 80 (porcentaje relativo)",
+  x_label    = "",
+  fill_label = "Lugar de nacimiento"
+)
+```
+
+Si consideramos revisar la proporción de personas por rango etario en relación lugar de nacimiento, es posible evidenciar que la mayoría de la población residente en la UPZ 80 nació en Bogotá, especialmente entre las cohortes más jóvenes, lo que sugiere un proceso de asentamiento progresivo y consolidación local. Sin embargo, es importante destacar cómo la proporción de personas originarias de otras regiones del país aumenta constantemente con respecto a la edad, tendencia sólo aplanada por la mortalidad propia del ciclo de vida humano, que se evidencia en la reducción de la curva al llegar a la tercera edad, esto refleja el peso histórico de flujos migratorios internos hacia la capital. Este patrón confirma que la UPZ 80 combina características de población establecida con una base migrante de origen rural o de otras ciudades, aspecto coherente con su historia de urbanización popular ligada al crecimiento económico de la central de abastos y sus entornos. La migración internacional también se ve reflejada en este gráfico: nótese la proporción de personas jóvenes de la muestra, especialmente en el segmento de 20 a 30 años, lo anterior permite concluir la importancia del mercado informal del sector y el peso económico de Corabastos; este importante nodo logístico es un polo de atracción para la reciente ola migratoria venezolana, la cual parece verse reflejada en el gráfico anterior.
+
+```{r echo=FALSE}
+kable(tabla_categorica_resumen(
+  data                = cnpv_5per_filter,
+  variable_categorica = PA_LUG_NAC,
+  modo_porcentaje = TRUE
+), caption = "Detalle del procentaje de personas por origen regional")
+```
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+# Gráfico Lugar de nacimiento por grupo etario - UPZ 80
+grafico_proporciones_cruzadas(
+  data = cnpv_5per_filter %>%
+    dplyr::filter(PA_LUG_NAC != 9, P_NIVEL_ANOSR != 9),
+  x_var      = PA_LUG_NAC,
+  fill_var   = P_NIVEL_ANOSR,
+  titulo     = "Escolaridad por lugar de origen - UPZ 80",
+  x_label    = "Grupo etario",
+  fill_label = "Grado de escolaridad"
+)
+```
+
+Con relación al grado educativo y el componente migratorio, el anterior gráfico revela una relación clara entre el lugar de origen y el nivel educativo alcanzado por la población de la UPZ 80. Las personas nacidas en Bogotá presentan, en términos relativos, mayores niveles de escolaridad, especialmente en los técnicos, tecnológicos y superiores, mientras que quienes provienen de otras regiones del país tienden a concentrarse en niveles educativos básicos o incluso sin escolaridad formal. Este patrón sugiere que los procesos migratorios hacia la UPZ 80 han estado asociados a poblaciones con menores trayectorias educativas previas, reforzando las dinámicas de desigualdad social y reflejando las diferencias estructurales entre origen urbano y rural dentro del tejido poblacional del sector. No obstante, al revisar el segmento de migrantes extranjeros, es relevante la proporción de personas con altos niveles de escolaridad, especialmente universitarios; la alta competitividad del precario mercado laboral colombiano, las dificultades para convalidar títulos académicos, y una condiciones migratorias difíciles de la ola migratoria venezolana durante al menos la década pasada, refleja que para el 2018 esta población muy posiblemente encontró refugio en el espacio laboral del sector.
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+grafico_proporciones_cruzadas(
+  data       = cnpv_5per_filter,
+  x_var      = PA_LUG_NAC,
+  fill_var   = P_TRABAJO,
+  titulo     = "Situación laboral por lugar de nacimiento - UPZ 80",
+  x_label    = "",
+  fill_label = "Lugar de nacimiento"
+)
+```
+
+También es relevante cómo la proporción de personas trabajadoras por origen, las condiciones migratorias de estas personas, y sus motivos (ya ampliamente discutidos para este punto) para llegar al espacio urbano, reflejan claramente la dinámica económica del sector, también, cómo las personas oriundas de Bogotá presentan una mayor proporción relativa como estudiantes: asociado al peso de las poblaciones jóvenes en edad escolar, la cuales ya revisamos anteriormente. Ahora bien, es importante considerar los patrones de asentamiento de estas poblaciones en el tiempo de manera más contundente.
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+grafico_proporciones_cruzadas(
+  data       = cnpv_5per_filter %>% filter(PA_VIVIA_1ANO %in% 1:4, !is.na(P_EDADR)),
+  x_var      = PA_LUG_NAC,
+  fill_var   = PA_VIVIA_1ANO,
+  titulo     = "Residencia hace 12 meses por grupo etario",
+  x_label    = "Grupo etario",
+  fill_label = "Residencia hace 1 año"
+)
+```
+
+```{r echo=FALSE}
+kable(tabla_categorica_resumen(
+  data                = cnpv_5per_filter,
+  variable_categorica = PA_VIVIA_1ANO,
+  modo_porcentaje = TRUE
+), caption = "Población por asentamiento - 1 año" )
+```
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+grafico_proporciones_cruzadas(
+  data       = cnpv_5per_filter %>% filter(PA_VIVIA_5ANOS %in% 1:4, !is.na(P_EDADR)),
+  x_var      = PA_LUG_NAC,
+  fill_var   = PA_VIVIA_5ANOS,
+  titulo     = "Residencia hace 5 años por grupo etario",
+  x_label    = "Grupo etario",
+  fill_label = "Residencia hace 5 años"
+)
+```
+
+```{r echo=FALSE}
+kable(tabla_categorica_resumen(
+  data                = cnpv_5per_filter,
+  variable_categorica = PA_VIVIA_5ANOS,
+  modo_porcentaje = TRUE
+), caption = "Población por asentamiento - 5 años" )
+```
+
+Al observar los datos de residencia por periodo de asentamiento, tanto a un año como a cinco años, se confirma la tendencia hacia una población mayoritariamente establecida en el territorio. La gran mayoría de personas, especialmente en las etapas adultas y de juventud, declaran haber residido en la capital durante ambos periodos, lo que sugiere trayectorias de asentamiento prolongadas y procesos de arraigo en el sector. Sin embargo, persiste una proporción minoritaria pero significativa de población migrante reciente, tanto de otros municipios colombianos como de otros países, concentrada principalmente en las edades productivas, lo que refuerza el papel de la UPZ 80 como espacio de atracción laboral y residencial. También destaca el peso relativo de las nuevas generaciones nacidas en el lugar, particularmente reflejado en el porcentaje de menores que “no habían nacido” hace cinco años, lo cual confirma el carácter reproductivo —en sentido demográfico— de la nueva población migrante ya establecida. Todo ello configura un patrón complejo donde convergen dinámicas de asentamiento histórico con flujos migratorios recientes, modelando un tejido social característico de las zonas populares de la capital colombiana.
+
+```{r echo=FALSE, fig.cap= "Elaboración propia con microdatos CNPV 2018. DANE"}
+
+tabla_f_mig <- tabla_distribucion_faceta(cnpv_5per_filter, 
+                                           P_EDADR, 
+                                           PA_LUG_NAC, 
+                                           P_SEXO)
+```
+
+```{r echo=FALSE, fig.cap="Elaboración propia con microdatos CNPV 2018. DANE", fig.height=5, fig.width=18, fig.align = "center"}
+
+# Distribución educativa por edad y sexo
+grafico_faceta(tabla_f_mig,
+               titulo = "Distribución migratoria por edad y sexo (porcentaje relativo)",
+               x_label = "Grupo etario",
+               y_label = "Proporción (%)",
+               fill_label = "Origen regional",
+               facet_label = "Sexo")
+```
+
+Finalmente, este ultimo gráfico refuerza un argumento clave surgido durante el proceso analítico, el entorno de corabastos está estrechamente relacionado con las dinámicas económicas de la gran plaza, una población de origen migrante que ha ido haciéndose un lugar en el espacio urbano, lo vive y lo hace suyo; una población trabajadora caracterizada por un grupo importante de familias foráneas, muy posiblemente de extracción campesina, y que progresivamente han hecho de los alrededores de corabastos su hogar, su refugio, y su principal fuente de sustento: se trata de un proceso migratorio que aún no ha terminado, y que inicia un nuevo capitulo con la migración internacional, que ha dinamizado el mercado laboral y las costumbres de los barrios, aunque no exenta de fricciones, disputas y negociaciones.
+
+## Cierre y discusión final
+
+A la luz de los resultados presentados, es posible afirmar que la hipótesis inicial planteada en este ejercicio exploratorio encuentra sustento parcial en los datos observados. La población residente en la UPZ 80 corresponde, en buena medida, a familias de origen rural, asentadas históricamente en el sector en función de dinámicas económicas asociadas a la central de abastos. La estructura demográfica revela una población mayoritariamente joven y adulta en edad productiva, aunque con señales claras de envejecimiento progresivo y una tendencia decreciente en la natalidad, rasgos compatibles con un proceso de transición demográfica avanzada.
+
+En cuanto a la dimensión educativa, los datos confirman un aumento relativo de los niveles de escolaridad en las generaciones más jóvenes, lo que sugiere la existencia de un proceso de movilidad social ascendente, aunque limitado por las condiciones estructurales del territorio. La mayoría de los residentes mantienen inserciones laborales en sectores de baja cualificación, lo que reafirma el carácter predominantemente popular del tejido social de la UPZ.
+
+No obstante, este análisis debe ser leído con cautela. La delimitación territorial oficial de la UPZ no siempre corresponde con la realidad social efectiva, y los microdatos censales —aunque valiosos— presentan limitaciones en cuanto a actualidad y desagregación de ciertas variables clave. Por ello, resulta imprescindible complementar este tipo de aproximaciones cuantitativas con investigación de campo, observación directa y un trabajo documental más amplio que permita un diagnóstico más preciso y ajustado a la complejidad del lugar. En ese sentido, el presente informe constituye un insumo preliminar para una caracterización social y demográfica de la UPZ 80, ofreciendo un punto de partida sólido para investigaciones futuras orientadas a comprender con mayor profundidad la reproducción social y material de este sector estratégico de la ciudad de Bogotá.
+
+Finalmente, este ejercicio confirma la relevancia de aplicar de manera rigurosa y reflexiva las herramientas de la demografía y la estadística social en el análisis territorial. La comprensión profunda de espacios urbanos como la UPZ Corabastos exige no solo métodos cualitativos, sino también un compromiso serio con el análisis cuantitativo, capaz de ofrecer insumos para el diseño de políticas públicas y para el fortalecimiento de los procesos de investigación social aplicada.
+
+## Bibliografía
+
+1.  Departamento Administrativo Nacional de Estadística - DANE. (s/f). *Catálogo Central de Datos*. Recuperado el 20 de mayo de 2025, de <https://microdatos.dane.gov.co/index.php/catalog/central/about>
+
+2.  Gil Torres, Á. D. (2021). *El teatro de lo marginal: Coteros y trabajadores informales semiestacionarios en la Corporación de Abastos de Bogotá* [Trabajo de grado - Maestría, Universidad Nacional de Colombia]. <https://repositorio.unal.edu.co/handle/unal/80432>
+
+3.  Secretaría Distrital de Planeación. (s/f). Recuperado el 7 de julio de 2025, de <https://www.sdp.gov.co/>
+
+4.  Suárez, E. (2020). *Trabajadores de la economía popular en la avenida de Los Muiscas y barrios aledaños en UPZ Corabastos*. en RELET.
+
+5.  Manual de Demografía. Programa de Población, Facultad de Ciencias Sociales, Universidad de la República, de <https://manualdemografia.cienciassociales.edu.uy/>
