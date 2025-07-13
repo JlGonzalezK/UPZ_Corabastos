@@ -1,3 +1,4 @@
 ### Sobre la ejecución del código
 
-El script init.R contiene las entradas para probar las funciones.
+Abra directamente el proyecto usando el fichero .RProj en la raíz de esta proyecto
+ 
