@@ -21,7 +21,8 @@ Este repositorio contiene un primer avance exploratorio para caracterizar demogr
 - Descargue o clone este repositorio
 - Abra el fichero `UPZ_Corabastos.Rproj` con Rstudio para establecer la raíz automáticamente y repdroducir el codigo sin problemas
 - Ya en Rstudio, abra el archivo `informe_final.Rmd` para reproducir el ejercicio
-- **Opcional:** Puede usar `informe_final.html` para ver el informe completo de manera interactiva.
+
+**Opcional:** Puede usar `informe_final.html` para ver el informe completo de manera interactiva.
 
 ## Objetivo
 
