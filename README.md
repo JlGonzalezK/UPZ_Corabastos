@@ -14,7 +14,7 @@ jlgonzalezca@unal.edu.co
 
 ## Sobre el proyecto
 
-Este repositorio contiene un primer avance exploratorio para caracterizar demográficamente a la población residente en la UPZ 80 (Corabastos), ubicada en la ciudad de Bogotá. El ejercicio forma parte del trabajo final de las asignaturas "Introducción a R para Ciencias Sociales" y "Sociología Urbana", se propone como insumo para una futura investigación de grado en sociología.
+Este repositorio contiene un primer avance exploratorio para caracterizar demográficamente a la población residente en la UPZ 80 (Corabastos), ubicada en la ciudad de Bogotá. El ejercicio no representa resultados definitivos, se trata de un ejercicio exploratorio, pensado para adquirir herramientas propias como insumo en una futura investigación de grado en sociología.
 
 ## Instrucciones
 
