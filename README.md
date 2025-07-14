@@ -29,7 +29,6 @@ Este repositorio contiene un primer avance exploratorio para caracterizar demogr
 Explorar fuentes censales y geoespaciales mediante herramientas computacionales, con énfasis en el lenguaje de programación R, como insumo para construir un perfil del territorio de interés.
 
 ## Metodología
-Primera etapa:
 - Se hace uso del lenguaje de programación estadística [R y algunas de sus librerías](https://cran.r-project.org/) para procesamiento y análisis inicial.
 - Como IDE, se elige [RStudio](https://posit.co/downloads/) por su conveniencia y versatilidad.
 - Se utilizan los microdatos del CNPV 2018, publicados por el Departamento Administrativo Nacional de Estadística (DANE).
