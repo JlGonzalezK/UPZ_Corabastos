@@ -181,8 +181,8 @@ kable(cnpv_5per_filter %>%
     Total        = n()
   ) %>% 
   mutate(
-    "Hombres (%)" = 100 * Hombres / Total,
-    "Mujeres (%)" = 100 * Mujeres / Total
+   "Hombres (%)" = round(100 * Hombres / Total,2),
+   "Mujeres (%)" = round(100 * Mujeres / Total,2)
   ), caption = "Resumen población por sexo")
     
 ```
