@@ -14,7 +14,7 @@ jlgonzalezca@unal.edu.co
 
 ## Sobre el proyecto
 
-Este repositorio contiene un primer avance exploratorio para caracterizar demográficamente a la población residente en la UPZ 80 (Corabastos), ubicada en la ciudad de Bogotá. El ejercicio no representa resultados definitivos, se trata de un ejercicio exploratorio, pensado para adquirir herramientas propias como insumo en una futura investigación de grado en sociología.
+Este repositorio contiene un primer avance exploratorio para caracterizar demográficamente a la población residente en la UPZ 80 (Corabastos), ubicada en la ciudad de Bogotá. El ejercicio no representa resultados definitivos, se trata de un ejercicio exploratorio pensado para adquirir herramientas propias como insumo en una futura investigación de grado en sociología.
 
 ## Instrucciones
 
@@ -39,14 +39,14 @@ Explorar fuentes censales y geoespaciales mediante herramientas computacionales,
 Disposición sugerida del espacio de trabajo para reproducir correctamente este proyecto.
 
 ```
-~/Desktop/UPZ_Corabastos
-          ├── doc/                            # Documentación del proyecto  
-          ├── input/                          # Fuentes de datos del proyecto
-          ├── output/                         # Resultados obtenidos durante el proceso  
-          ├── R/                              # Código del proyecto
-          ├── UPZ_Corabastos.Rproj            # Archivo para abrir el proyecto y establecer la raíz.
-          ├── informe_final.html              # Informe exportado a html con mapa interactivo incrustado
-          └── informe_final.Rmd               # Archivo maestro del proyecto
+~/UPZ_Corabastos
+  ├── doc/                            # Documentación del proyecto  
+  ├── input/                          # Fuentes de datos del proyecto
+  ├── output/                         # Resultados obtenidos durante el proceso  
+  ├── R/                              # Código del proyecto
+  ├── UPZ_Corabastos.Rproj            # Archivo para abrir el proyecto y establecer la raíz.
+  ├── informe_final.html              # Informe exportado a html con mapa interactivo incrustado
+  └── informe_final.Rmd               # Archivo maestro del proyecto
 
 ```
 
@@ -54,7 +54,7 @@ Disposición sugerida del espacio de trabajo para reproducir correctamente este 
 
 Este repositorio se encuentra bajo una licencia [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es). Puedes usar, compartir y adaptar el contenido para fines no comerciales, siempre y cuando cites al autor original y compartas bajo la misma licencia.
 
-**Cómo citar:** Formato sugerido para referenciar este trabajo en un documento académico
+**Cómo citar:** Formato sugerido
 
 
 > González–Castellanos, J. L. (2025). *La producción del espacio urbano en la UPZ Corabastos...* [Repositorio en GitHub]. https://github.com/JlGonzalezK/UPZ_Corabastos 
