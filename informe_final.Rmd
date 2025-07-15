@@ -23,14 +23,12 @@ source("R/lib/gis/viz_leaflet.R")
 ```
 
 ```{r load data, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
-
 upz80 <- read_rds("input/upz80_filtered.rds")
-
 cnpv_5per_filter  <- upz80$cnpv$cnpv_5per_filter
-geo_mgn_filter    <- upz80$geo$geo_mzn_filter
+geo_mzn_filter    <- upz80$geo$geo_mzn_filter
 geo_upz_filter    <- upz80$geo$geo_upz_filter
-upz_dadep         <- st_read("input/DADEP/SHP/IndUPZ.shp")
-upz_dadep         <- st_transform(upz_dadep, st_crs(geo_mgn_filter))
+upz_dadep         <- upz80$geo$upz_dadep
+
 ```
 
 # La producción del espacio urbano en la UPZ Corabastos: análisis exploratorio de fuentes censales
@@ -147,11 +145,14 @@ Sin embargo, es importante aclarar que la delimitación por UPZ, como la de Cora
 ## Sobre la UPZ
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.cap= "mapa interactivo de UPZ-Bogota. Elaboración propia. DANE, DADEP"}
-
-viz_leaflet(geo_upz_filter, 
-            geo_mgn_filter,
+viz_leaflet(geo_upz_filter,
+            geo_mzn_filter,
             upz_dadep,
-            names = c("UPZ 80","Manzanas UPZ","UPZ total"))
+            names = c("UPZ (filtro)", 
+                      "Manzanas (filtro)",
+                      "UPZ Total"),
+            popup_cols = c("NOMBRE","MANZ_CCNCT","NOMBRE"))
+
 ```
 
 
