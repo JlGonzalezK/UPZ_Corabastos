@@ -22,7 +22,7 @@ Este repositorio contiene un primer avance exploratorio para caracterizar demogr
 - Abra el fichero `UPZ_Corabastos.Rproj` con Rstudio para establecer la raíz automáticamente y repdroducir el codigo sin problemas
 - Ya en Rstudio, abra el archivo `informe_final.Rmd` para reproducir el ejercicio
 
-**Opcional:** Puede usar `informe_final.html` para ver el informe completo de manera interactiva.
+**Opcional:** Puede [pulsar sobre este enlace](https://jlgonzalezk.github.io/UPZ_Corabastos/) para ver el informe completo online.
 
 ## Objetivo
 
@@ -45,7 +45,6 @@ Disposición sugerida del espacio de trabajo para reproducir correctamente este 
   ├── output/                         # Resultados obtenidos durante el proceso  
   ├── R/                              # Código del proyecto
   ├── UPZ_Corabastos.Rproj            # Archivo para abrir el proyecto y establecer la raíz.
-  ├── informe_final.html              # Informe exportado a html con mapa interactivo incrustado
   └── informe_final.Rmd               # Archivo maestro del proyecto
 
 ```
