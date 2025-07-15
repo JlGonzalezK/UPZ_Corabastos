@@ -170,9 +170,26 @@ piramide_pob(cnpv_5per_filter, age = P_EDADR, gender = P_SEXO,
 
 ```
 
+```{r, echo=FALSE, fig.height=8, fig.width=12, fig.align = "Left"}
+
+library(dplyr)
+
+kable(cnpv_5per_filter %>%
+  summarise(
+    Hombres      = sum(P_SEXO == 1),
+    Mujeres      = sum(P_SEXO == 2),
+    Total        = n()
+  ) %>% 
+  mutate(
+    "Hombres (%)" = 100 * Hombres / Total,
+    "Mujeres (%)" = 100 * Mujeres / Total
+  ), caption = "Resumen población por sexo")
+    
+```
+
 **Descripción de pirámide**
 
-Los datos reflejan una población joven, en edad laboral plena, el mayor grupo poblacional[^1] corresponde a personas entre los 20 y 30 años, siendo en su mayoría hombres, tendencia que se mantiene hasta inicios de la mediana edad, en donde el indice de feminidad se impone hasta la vejez, se puede apreciar una contracción de la natalidad importante y una reducción drástica de la población de la tercera edad.
+Con una población de 55.262 personas efectivamente censadas, los datos reflejan una población joven, en edad laboral plena, el mayor grupo poblacional[^1] corresponde a personas entre los 20 y 30 años, siendo en su mayoría hombres, tendencia que se mantiene hasta inicios de la mediana edad, en donde el indice de feminidad se impone hasta la vejez, se puede apreciar una contracción de la natalidad importante y una reducción drástica de la población de la tercera edad.
 
 [^1]: en el contexto demográfico se denomina población a un *"conjunto de personas que comparten un mismo territorio y período histórico y que están sujetas al riesgo de ocurrencia de eventos demográficos que aseguran su crecimiento (natalidad, mortalidad y migración)." esta definición difiere del concepto clásico estadístico, en donde la población demográfica sería también una muestra.* ([Universidad de la república](https://manualdemografia.cienciassociales.edu.uy/glosario/))
 
