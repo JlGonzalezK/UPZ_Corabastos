@@ -40,7 +40,7 @@ Disposición sugerida del espacio de trabajo para reproducir correctamente este 
 
 ```
 ~/UPZ_Corabastos
-  ├── doc/                            # Documentación del proyecto  
+  ├── docs/                           # Documentación del proyecto y reportes de resultados
   ├── input/                          # Fuentes de datos del proyecto
   ├── output/                         # Resultados obtenidos durante el proceso  
   ├── R/                              # Código del proyecto
