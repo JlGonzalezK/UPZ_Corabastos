@@ -1,4 +1,4 @@
-# La producción del espacio urbano en la UPZ Corabastos: análisis exploratorio de fuentes censales
+# La producción del espacio urbano en la UPZ Corabastos: análisis exploratorio de fuentes
 
 
 <div align="right">
